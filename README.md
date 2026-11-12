@@ -10,6 +10,7 @@ Latest news from **Aftenposten** and **Dagbladet**, built with **React + Vite + 
 - Filter by source and category, plus full-text search
 - Coloured source badges, relative times ("for 12 minutter siden"), Norwegian dates (Europe/Oslo)
 - Placeholder when an article has no image; light and dark themes; mobile layout
+- Pagination: 12 articles per page after the featured story
 - Reloads the news every 5 minutes
 
 ## How it works

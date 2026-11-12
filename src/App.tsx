@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react';
 import { formatDate, timeAgo, today, topCategories } from './format';
+import { Pager } from './Pager';
+import { pageCount, type PagerLabels } from './paging';
 import { Thumb } from './Thumb';
 import type { Article, Source } from './types';
 import { useNews } from './useNews';
+
+const PAGE_SIZE = 12; // articles per page (after the featured one)
+const LABELS: PagerLabels = { prev: '‹ Forrige', next: 'Neste ›', nav: 'Sidenavigasjon', num: (n: number) => String(n) };
 
 function Kicker({ item, source }: { item: Article; source?: Source }) {
   return (
@@ -44,6 +49,17 @@ export default function App() {
   // The most recent article with an image is the featured story ("Hovedsak").
   const hero = items.find((i) => i.image) ?? items[0];
   const rest = items.filter((i) => i !== hero);
+
+  // Paging: resets to page 1 whenever a filter or the search changes (but not on auto-refresh).
+  const filterKey = `${source}|${category}|${query}`;
+  const [paging, setPaging] = useState({ key: filterKey, page: 1 });
+  const pages = pageCount(rest.length, PAGE_SIZE);
+  const page = Math.min(paging.key === filterKey ? paging.page : 1, pages);
+  const pageItems = rest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const goTo = (p: number) => {
+    setPaging({ key: filterKey, page: p });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="page">
@@ -98,7 +114,7 @@ export default function App() {
         </p>
       )}
 
-      {hero && (
+      {hero && page === 1 && (
         <a className="hero" href={hero.link} target="_blank" rel="noopener noreferrer">
           <Thumb src={hero.image} source={sources.get(hero.source)} />
           <div>
@@ -111,7 +127,7 @@ export default function App() {
       )}
 
       <section className="grid">
-        {rest.map((item) => (
+        {pageItems.map((item) => (
           <a key={item.link} className="story" href={item.link} target="_blank" rel="noopener noreferrer">
             <div className="media">
               <Thumb src={item.image} source={sources.get(item.source)} />
@@ -124,6 +140,9 @@ export default function App() {
           </a>
         ))}
       </section>
+
+      <Pager page={page} total={pages} labels={LABELS} onChange={goTo} />
+      {pages > 1 && <p className="pager-info">{`Side ${page} av ${pages}`}</p>}
 
       {feed && items.length === 0 && <p className="empty">Ingen artikler samsvarer med søket ditt.</p>}
 
